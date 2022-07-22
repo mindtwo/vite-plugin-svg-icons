@@ -1,7 +1,5 @@
 # vite-plugin-svg-icons
 
-**English** | [中文](./README.zh_CN.md)
-
 Used to generate svg sprite map.
 
 ## Feature
@@ -265,10 +263,6 @@ pnpm run build
 
 ```
 
-## Sample project
-
-[Vben Admin](https://github.com/anncwb/vue-vben-admin)
-
 ## License
 
-[MIT © Vben-2020](./LICENSE)
+[MIT © mindtwo-2022](./LICENSE)

@@ -1,9 +1,8 @@
 {
-  "name": "vite-plugin-svg-icons-monorepo",
-  "private": true,
-  "version": "2.0.1",
+  "name": "@mindtwo/vite-plugin-svg-icons",
+  "version": "2.1.1",
   "license": "MIT",
-  "author": "Vben",
+  "author": "mindtwo",
   "scripts": {
     "stub": "pnpm run prepack --filter ./packages -- --stub",
     "postinstall": "pnpm run stub",
@@ -24,12 +23,12 @@
   ],
   "repository": {
     "type": "git",
-    "url": "https://github.com/anncwb/vite-plugin-svg-icons"
+    "url": "git+https://github.com/mindtwo/vite-plugin-svg-icons.git"
   },
   "bugs": {
-    "url": "https://github.com/anncwb/vite-plugin-svg-i cons/issues"
+    "url": "https://github.com/mindtwo/vite-plugin-svg-icons/issues"
   },
-  "homepage": "https://github.com/anncwb/vite-plugin-svg-icons/tree/master/#readme",
+  "homepage": "https://github.com/mindtwo/vite-plugin-svg-icons/tree/main/#readme",
   "devDependencies": {
     "@commitlint/cli": "^16.1.0",
     "@commitlint/config-conventional": "^16.0.0",
