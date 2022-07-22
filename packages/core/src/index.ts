@@ -14,6 +14,7 @@ import {
   SVG_DOM_ID,
   SVG_ICONS_CLIENT,
   SVG_ICONS_REGISTER_NAME,
+  ICON_NAME_LOOKUPS,
   XMLNS,
   XMLNS_LINK,
 } from './constants'
@@ -31,6 +32,7 @@ export function createSvgIconsPlugin(opt: ViteSvgIconsPlugin): Plugin {
     symbolId: 'icon-[dir]-[name]',
     inject: 'body-last' as const,
     customDomId: SVG_DOM_ID,
+    iconNameLookups: ICON_NAME_LOOKUPS,
     ...opt,
   }
 
@@ -115,7 +117,13 @@ export async function createModuleCode(
   svgoOptions: OptimizeOptions,
   options: ViteSvgIconsPlugin,
 ) {
-  const { insertHtml, idSet } = await compilerIcons(cache, svgoOptions, options)
+  let usedIds = new Set<string>()
+
+  if (options.iconNameLookups) {
+    usedIds = await collectUsedIcons(cache, options)
+  }
+
+  const { insertHtml, idSet } = await compilerIcons(cache, svgoOptions, options, usedIds)
 
   const xmlns = `xmlns="${XMLNS}"`
   const xmlnsLink = `xmlns:xlink="${XMLNS_LINK}"`
@@ -162,6 +170,71 @@ function domInject(inject: DomInject = 'body-last') {
   }
 }
 
+async function collectUsedIcons(cache: Map<string, FileStats>, options: ViteSvgIconsPlugin) {
+
+  const { iconNameLookups } = options
+
+  const vueFileStats = fg.sync('**/*.vue', {
+    cwd: path.resolve(process.cwd(), 'src'),
+    stats: true,
+    absolute: true,
+  })
+
+  const usedIdSet = new Set<string>()
+  let relativeName = ''
+
+  for (const entry of vueFileStats) {
+    const { path, stats: { mtimeMs } = {} } = entry
+
+    const getIconIds = async () => {
+      relativeName = normalizePath(path).replace(normalizePath('src' + '/'), '')
+
+      const iconIds = new Array<string>()
+      let content = fs.readFileSync(path, 'utf-8')
+      const regex = getRegex(iconNameLookups as Array<string>)
+      let m
+
+      while ((m = regex.exec(content)) !== null) {
+        // This is necessary to avoid infinite loops with zero-width matches
+        if (m.index === regex.lastIndex) {
+          regex.lastIndex++
+        }
+
+        let { groups: { iconId } } = m
+        if (iconId) {
+          const symbolId = createSymbolId(iconId, options)
+          iconIds.push(symbolId)
+        }
+      }
+      return iconIds
+    }
+
+    let iconIds
+    const cacheStat = cache.get(path)
+    if (cacheStat) {
+      if (cacheStat.mtimeMs !== mtimeMs) {
+        iconIds = await getIconIds()
+      } else {
+        iconIds = JSON.parse(cacheStat.code)
+      }
+    } else {
+      iconIds = await getIconIds()
+    }
+
+    iconIds && iconIds.forEach(item => usedIdSet.add(item))
+
+    iconIds &&
+        cache.set(path, {
+          mtimeMs,
+          relativeName,
+          code: JSON.stringify(iconIds),
+        })
+
+  }
+
+  return usedIdSet
+}
+
 /**
  * Preload all icons in advance
  * @param cache
@@ -171,6 +244,7 @@ export async function compilerIcons(
   cache: Map<string, FileStats>,
   svgOptions: OptimizeOptions,
   options: ViteSvgIconsPlugin,
+  usedIds: Set<string>
 ) {
   const { iconDirs } = options
 
@@ -204,7 +278,9 @@ export async function compilerIcons(
         } else {
           svgSymbol = cacheStat.code
           symbolId = cacheStat.symbolId
-          symbolId && idSet.add(symbolId)
+          if (symbolId && (usedIds.has(symbolId) || usedIds.size === 0)) {
+            idSet.add(symbolId)
+          }
         }
       } else {
         await getSymbol()
@@ -217,9 +293,17 @@ export async function compilerIcons(
           code: svgSymbol,
           symbolId,
         })
+
+      if (usedIds && usedIds.size > 0) {
+        if (!usedIds.has(symbolId)) {
+          continue
+        }
+      }
+
       insertHtml += `${svgSymbol || ''}`
     }
   }
+
   return { insertHtml, idSet }
 }
 
@@ -282,4 +366,8 @@ export function discreteDir(name: string) {
   const fileName = strList.pop()
   const dirName = strList.join('-')
   return { fileName, dirName }
+}
+
+function getRegex(iconNameLookups: Array<string>) {
+  return new RegExp(`(${iconNameLookups.join('|')})\=\"(?<iconId>[A-Za-z0-9 _\-]*)\"`, 'gi')
 }

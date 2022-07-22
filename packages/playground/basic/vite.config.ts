@@ -14,6 +14,7 @@ export default (): UserConfigExport => {
         // icon symbolId
         // default
         symbolId: 'icon-[dir]-[name]',
+        iconNameLookups: ['name', 'iconName'],
       }),
     ],
   }

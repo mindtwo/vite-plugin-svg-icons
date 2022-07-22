@@ -30,7 +30,14 @@ export interface ViteSvgIconsPlugin {
    * custom dom id
    * @default: __svg__icons__dom__
    */
-  customDomId?: string
+  customDomId?: string,
+
+  /**
+   * Add Array of html tag attribute names used in your DOM to only
+   * include use icons
+   * @default: false
+   */
+  iconNameLookups?: boolean | Array<string>,
 }
 
 export interface FileStats {
