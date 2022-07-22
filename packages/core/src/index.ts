@@ -123,7 +123,12 @@ export async function createModuleCode(
     usedIds = await collectUsedIcons(cache, options)
   }
 
-  const { insertHtml, idSet } = await compilerIcons(cache, svgoOptions, options, usedIds)
+  const { insertHtml, idSet } = await compilerIcons(
+    cache,
+    svgoOptions,
+    options,
+    usedIds,
+  )
 
   const xmlns = `xmlns="${XMLNS}"`
   const xmlnsLink = `xmlns:xlink="${XMLNS_LINK}"`
@@ -170,27 +175,33 @@ function domInject(inject: DomInject = 'body-last') {
   }
 }
 
-async function collectUsedIcons(cache: Map<string, FileStats>, options: ViteSvgIconsPlugin) {
-
+export async function collectUsedIcons(
+  cache: Map<string, FileStats>,
+  options: ViteSvgIconsPlugin,
+) {
   const { iconNameLookups } = options
 
   const vueFileStats = fg.sync('**/*.vue', {
-    cwd: path.resolve(process.cwd(), 'src'),
+    cwd: 'resources/js',
     stats: true,
     absolute: true,
   })
 
   const usedIdSet = new Set<string>()
+
   let relativeName = ''
 
   for (const entry of vueFileStats) {
     const { path, stats: { mtimeMs } = {} } = entry
 
     const getIconIds = async () => {
-      relativeName = normalizePath(path).replace(normalizePath('src' + '/'), '')
+      relativeName = normalizePath(path).replace(
+        normalizePath('resources/js' + '/'),
+        '',
+      )
 
       const iconIds = new Array<string>()
-      let content = fs.readFileSync(path, 'utf-8')
+      const content = fs.readFileSync(path, 'utf-8')
       const regex = getRegex(iconNameLookups as Array<string>)
       let m
 
@@ -200,7 +211,9 @@ async function collectUsedIcons(cache: Map<string, FileStats>, options: ViteSvgI
           regex.lastIndex++
         }
 
-        let { groups: { iconId } } = m
+        const {
+          groups: { iconId },
+        } = m
         if (iconId) {
           const symbolId = createSymbolId(iconId, options)
           iconIds.push(symbolId)
@@ -221,17 +234,15 @@ async function collectUsedIcons(cache: Map<string, FileStats>, options: ViteSvgI
       iconIds = await getIconIds()
     }
 
-    iconIds && iconIds.forEach(item => usedIdSet.add(item))
+    iconIds && iconIds.forEach((item) => usedIdSet.add(item))
 
     iconIds &&
-        cache.set(path, {
-          mtimeMs,
-          relativeName,
-          code: JSON.stringify(iconIds),
-        })
-
+      cache.set(path, {
+        mtimeMs,
+        relativeName,
+        code: JSON.stringify(iconIds),
+      })
   }
-
   return usedIdSet
 }
 
@@ -244,7 +255,7 @@ export async function compilerIcons(
   cache: Map<string, FileStats>,
   svgOptions: OptimizeOptions,
   options: ViteSvgIconsPlugin,
-  usedIds: Set<string>
+  usedIds: Set<string>,
 ) {
   const { iconDirs } = options
 
@@ -265,6 +276,20 @@ export async function compilerIcons(
       let symbolId
       let relativeName = ''
 
+      const isVariant = (symbolId) => {
+        if (usedIds.has(symbolId) || usedIds.size === 0) {
+          return true
+        }
+
+        for (const used of usedIds.values()) {
+          if (symbolId.includes(used)) {
+            return true
+          }
+        }
+
+        return false
+      }
+
       const getSymbol = async () => {
         relativeName = normalizePath(path).replace(normalizePath(dir + '/'), '')
         symbolId = createSymbolId(relativeName, options)
@@ -278,7 +303,7 @@ export async function compilerIcons(
         } else {
           svgSymbol = cacheStat.code
           symbolId = cacheStat.symbolId
-          if (symbolId && (usedIds.has(symbolId) || usedIds.size === 0)) {
+          if (symbolId && isVariant(symbolId)) {
             idSet.add(symbolId)
           }
         }
@@ -295,7 +320,7 @@ export async function compilerIcons(
         })
 
       if (usedIds && usedIds.size > 0) {
-        if (!usedIds.has(symbolId)) {
+        if (!isVariant(symbolId)) {
           continue
         }
       }
@@ -368,6 +393,9 @@ export function discreteDir(name: string) {
   return { fileName, dirName }
 }
 
-function getRegex(iconNameLookups: Array<string>) {
-  return new RegExp(`(${iconNameLookups.join('|')})\=\"(?<iconId>[A-Za-z0-9 _\-]*)\"`, 'gi')
+export function getRegex(iconNameLookups: Array<string>) {
+  return new RegExp(
+    `(${iconNameLookups.join('|')})="(?<iconId>[A-Za-z0-9 _-]*)"`,
+    'gi',
+  )
 }

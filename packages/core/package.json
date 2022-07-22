@@ -1,7 +1,8 @@
 {
-  "name": "vite-plugin-svg-icons",
-  "version": "2.0.1",
-  "description": "Vite Plugin for fast creating SVG sprites.",
+  "name": "@mindtwo/vite-plugin-svg-icons",
+  "version": "2.1.8",
+  "license": "MIT",
+  "author": "mindtwo",
   "main": "dist/index.cjs",
   "module": "dist/index.mjs",
   "types": "dist/index.d.ts",
@@ -12,8 +13,6 @@
       "types": "./dist/index.d.ts"
     }
   },
-  "license": "MIT",
-  "author": "Vben",
   "files": [
     "dist",
     "client.d.ts"
@@ -30,18 +29,18 @@
     "svg",
     "sprite",
     "svgo",
-    "vben"
+    "mindtwo"
   ],
   "repository": {
     "type": "git",
-    "url": "https://github.com/anncwb/vite-plugin-svg-icons",
-    "directory": "packages/core"
+    "url": "git+https://github.com/mindtwo/vite-plugin-svg-icons.git"
   },
   "bugs": {
-    "url": "https://github.com/anncwb/vite-plugin-svg-i cons/issues"
+    "url": "https://github.com/mindtwo/vite-plugin-svg-icons/issues"
   },
-  "homepage": "https://github.com/anncwb/vite-plugin-svg-icons/tree/master/#readme",
+  "homepage": "https://github.com/mindtwo/vite-plugin-svg-icons/tree/main/#readme",
   "dependencies": {
+    "@mindtwo/vite-plugin-svg-icons": "^2.1.2",
     "@types/svgo": "^2.6.1",
     "cors": "^2.8.5",
     "debug": "^4.3.3",

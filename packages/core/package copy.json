@@ -1,6 +1,6 @@
 {
   "name": "@mindtwo/vite-plugin-svg-icons",
-  "version": "2.1.8",
+  "version": "2.1.1",
   "license": "MIT",
   "author": "mindtwo",
   "scripts": {
@@ -13,14 +13,7 @@
     "preinstall": "npx only-allow pnpm",
     "test": "vitest"
   },
-  "keywords": [
-    "vite",
-    "vite-plugin",
-    "svg",
-    "sprite",
-    "svgo",
-    "mindtwo"
-  ],
+  "keywords": ["vite", "vite-plugin", "svg", "sprite", "svgo", "vben"],
   "repository": {
     "type": "git",
     "url": "git+https://github.com/mindtwo/vite-plugin-svg-icons.git"
@@ -54,14 +47,8 @@
     "vitest": "^0.2.5"
   },
   "lint-staged": {
-    "*": [
-      "prettier --write --ignore-unknown"
-    ],
-    "packages/*/{src,types}/**/*.ts": [
-      "eslint --ext .ts"
-    ],
-    "packages/**/*.d.ts": [
-      "eslint --ext .ts"
-    ]
+    "*": ["prettier --write --ignore-unknown"],
+    "packages/*/{src,types}/**/*.ts": ["eslint --ext .ts"],
+    "packages/**/*.d.ts": ["eslint --ext .ts"]
   }
 }
